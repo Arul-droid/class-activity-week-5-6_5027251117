@@ -3,6 +3,7 @@ let courses = [];
 let currentFilter = "all";
 let loading = false;
 let submitting = false;
+const pendingIds = new Set();
 const actionError = document.getElementById("actionError");
 const taskForm = document.getElementById("taskForm");
 let loadError = "";
@@ -90,7 +91,24 @@ function render() {
       `${task.dueDate || "belum ditentukan"}`;
 
     content.append(title, detail);
-    li.append(content);
+    
+const checkbox = document.createElement("input");
+checkbox.type = "checkbox";
+checkbox.className = "completeCheckbox";
+checkbox.dataset.id = task.id;
+checkbox.checked = task.completed;
+checkbox.disabled = pendingIds.has(task.id);
+checkbox.setAttribute("aria-label", `Tandai selesai: ${task.text}`);
+
+const remove = document.createElement("button");
+remove.type = "button";
+remove.className = "deleteButton";
+remove.dataset.id = task.id;
+remove.textContent = "Hapus";
+remove.disabled = pendingIds.has(task.id);
+remove.setAttribute("aria-label", `Hapus: ${task.text}`);
+
+li.append(checkbox, content, remove);
     taskList.append(li);
   });
 }
@@ -172,4 +190,59 @@ loadTasks();
 
 loadTasks().catch(error => {
   statusBox.textContent = error.message;
+});
+
+// Dua listener pada induk list: tetap bekerja untuk task baru.
+async function mutateTask(id, method, completed) {
+  if (loading || pendingIds.has(id)) return;
+
+  pendingIds.add(id);
+  actionError.textContent = "";
+  render();
+
+  try {
+    const updated = await api(
+      `/api/tugas/${encodeURIComponent(id)}`,
+      {
+        method,
+        ...(method === "PATCH"
+          ? {
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ completed })
+            }
+          : {})
+      }
+    );
+
+    if (method === "DELETE") {
+      tasks = tasks.filter(task => task.id !== id);
+    } else {
+      tasks = tasks.map(task => task.id === id ? updated : task);
+    }
+  } catch (error) {
+    actionError.textContent = error.message;
+  } finally {
+    pendingIds.delete(id);
+    render();
+  }
+}
+
+taskList.addEventListener("click", event => {
+  const button = event.target.closest(".deleteButton");
+
+  if (button) {
+    void mutateTask(button.dataset.id, "DELETE");
+  }
+});
+
+taskList.addEventListener("change", event => {
+  if (event.target.matches(".completeCheckbox")) {
+    void mutateTask(
+      event.target.dataset.id,
+      "PATCH",
+      event.target.checked
+    );
+  }
 });

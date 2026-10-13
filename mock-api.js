@@ -1,5 +1,3 @@
-// Mock server lokal: hanya request /api/* yang diintersep.
-// Ganti script ini dengan backend sungguhan tanpa mengubah app.js.
 (() => {
   const nativeFetch = window.fetch.bind(window);
 
@@ -137,6 +135,43 @@
 
   tasks.push(task);
   return json(task, 201);
+}
+
+const match = url.pathname.match(/^\/api\/tugas\/([^/]+)$/);
+
+if (match && ["PATCH", "DELETE"].includes(method)) {
+  const id = decodeURIComponent(match[1]);
+  const index = tasks.findIndex(task => task.id === id);
+
+  if (index < 0) {
+    return json({ message: "Tugas tidak ditemukan." }, 404);
+  }
+
+  if (method === "DELETE") {
+    tasks.splice(index, 1);
+    return new Response(null, { status: 204 });
+  }
+
+  let body;
+
+  try {
+    body = JSON.parse(options.body);
+  } catch {
+    return json({ message: "Body JSON tidak valid." }, 400);
+  }
+
+  if (!body || typeof body.completed !== "boolean") {
+    return json({
+      message: "Status completed harus boolean."
+    }, 400);
+  }
+
+  tasks[index] = {
+    ...tasks[index],
+    completed: body.completed
+  };
+
+  return json(tasks[index]);
 }
 
     return json({ message: "Endpoint tidak ditemukan." }, 404);
