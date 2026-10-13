@@ -15,21 +15,37 @@ async function api(path, options = {}) {
   const res = await fetch(path, options);
 
   if (!res.ok) {
-    throw new Error(`Request gagal (${res.status}).`);
+    let message = `Request gagal (${res.status}).`;
+
+    try {
+      const body = await res.json();
+
+      if (typeof body.message === "string") {
+        message = body.message;
+      }
+    } catch {
+      // Respons error non-JSON tetap menjadi Error yang tertangani.
+    }
+
+    throw new Error(message);
   }
 
+  // Respons DELETE 204 tidak memiliki body JSON.
   return res.status === 204 ? null : res.json();
 }
 
 function render() {
-    taskForm.querySelectorAll("input, select, button").forEach(control => {
-    control.disabled = loading || submitting;});
-    taskList.replaceChildren();
-    taskList.setAttribute("aria-busy", String(loading));
+  taskForm.querySelectorAll("input, select, button").forEach(control => {
+    control.disabled = loading || submitting || Boolean(loadError);
+  });
 
-    document.getElementById("reloadButton").disabled = loading;
+  taskList.replaceChildren();
+  taskList.setAttribute("aria-busy", String(loading));
 
-    document.querySelectorAll("[data-filter]").forEach(button => {
+  document.getElementById("reloadButton").disabled =
+    loading || submitting || pendingIds.size > 0;
+
+  document.querySelectorAll("[data-filter]").forEach(button => {
     button.setAttribute(
       "aria-pressed",
       String(button.dataset.filter === currentFilter)
@@ -91,24 +107,24 @@ function render() {
       `${task.dueDate || "belum ditentukan"}`;
 
     content.append(title, detail);
-    
-const checkbox = document.createElement("input");
-checkbox.type = "checkbox";
-checkbox.className = "completeCheckbox";
-checkbox.dataset.id = task.id;
-checkbox.checked = task.completed;
-checkbox.disabled = pendingIds.has(task.id);
-checkbox.setAttribute("aria-label", `Tandai selesai: ${task.text}`);
 
-const remove = document.createElement("button");
-remove.type = "button";
-remove.className = "deleteButton";
-remove.dataset.id = task.id;
-remove.textContent = "Hapus";
-remove.disabled = pendingIds.has(task.id);
-remove.setAttribute("aria-label", `Hapus: ${task.text}`);
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "completeCheckbox";
+    checkbox.dataset.id = task.id;
+    checkbox.checked = task.completed;
+    checkbox.disabled = pendingIds.has(task.id);
+    checkbox.setAttribute("aria-label", `Tandai selesai: ${task.text}`);
 
-li.append(checkbox, content, remove);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "deleteButton";
+    remove.dataset.id = task.id;
+    remove.textContent = "Hapus";
+    remove.disabled = pendingIds.has(task.id);
+    remove.setAttribute("aria-label", `Hapus: ${task.text}`);
+
+    li.append(checkbox, content, remove);
     taskList.append(li);
   });
 }
@@ -147,21 +163,28 @@ taskForm.addEventListener("submit", async event => {
 });
 
 async function loadTasks() {
-  if (loading) return;
+  // Cegah reload saat request lain masih mengubah data.
+  if (loading || submitting || pendingIds.size > 0) return;
 
   loading = true;
   loadError = "";
   render();
 
   try {
-    tasks = await api("/api/tugas");
-    courses = await api("/api/matakuliah");
+    const [loadedTasks, loadedCourses] = await Promise.all([
+      api("/api/tugas"),
+      api("/api/matakuliah")
+    ]);
+
+    tasks = loadedTasks;
+    courses = loadedCourses;
 
     const select = document.getElementById("courseInput");
     select.replaceChildren(new Option("Pilih mata kuliah", ""));
 
     courses.forEach(course => {
-    select.add(new Option(course.name, course.id));});
+      select.add(new Option(course.name, course.id));
+    });
   } catch (error) {
     loadError = error.message;
   } finally {
@@ -185,8 +208,6 @@ document.getElementById("networkMode")
   .addEventListener("change", event => {
     window.__API.setMode(event.target.value);
   });
-
-loadTasks();
 
 loadTasks().catch(error => {
   statusBox.textContent = error.message;
