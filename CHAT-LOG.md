@@ -51,3 +51,105 @@ Can you make a Markdown?
 
 ### Assistant
 Created this Markdown chat log.
+
+# W6
+
+### User
+Ini merupakan tugas saya sekarang, dan tugas saya minggu lalu. Tolong jelaskan apa yang diminta dari tugas tersebut dan berikan arahan mengenai bagaimana saya dapat melanjutkannya.
+
+### Assistant
+Halo Arul, tugas Minggu 6 pada dasarnya adalah pengembangan lanjutan dari aplikasi Task Tracker yang sudah kamu buat di Minggu 5. Kalau pada minggu lalu aplikasi masih bekerja dengan data lokal/DOM saja, maka pada Minggu 6 kamu diminta untuk menghubungkan aplikasi tersebut ke REST API menggunakan JavaScript asynchronous dan Fetch API.
+
+Tujuan utama dari tugas ini adalah agar aplikasi Task Tracker bisa:
+- mengambil data dari server dengan `fetch()`
+- menambah tugas ke server lewat `POST`
+- mengubah status tugas lewat `PATCH`
+- menghapus tugas lewat `DELETE`
+- menangani keadaan loading, error, dan data kosong dengan UI yang rapi
+
+Berikut kebutuhan fungsional utama yang diminta:
+
+1. Pengambilan data (GET) secara paralel
+   Kamu harus memanggil dua endpoint secara bersamaan melalui `Promise.all`, yaitu:
+   - `/api/tugas`
+   - `/api/matakuliah`
+
+   Tujuannya agar saat halaman pertama kali dibuka, daftar tugas dan pilihan mata kuliah muncul sekaligus.
+
+2. Manajemen state UI
+   Aplikasi harus mampu menampilkan kondisi berikut:
+   - loading: sedang memuat data
+   - error: gagal memuat data, dengan tombol "Coba lagi"
+   - empty state: belum ada tugas
+
+3. Fungsi helper `api()`
+   Kamu wajib membuat fungsi pembungkus `fetch()` yang berfungsi untuk menangani respons API. Jika `res.ok` bernilai `false`, fungsi tersebut harus melempar error dengan pesan dari server. Ini penting agar aplikasi tidak crash dan dapat menampilkan pesan error yang jelas ke user.
+
+4. Penambahan tugas (POST)
+   Form tidak lagi hanya mengubah DOM, tetapi harus mengirim data ke server dalam format JSON. Tombol submit harus dinonaktifkan saat proses pengiriman berlangsung agar tidak terjadi double submit. Harus juga menangani error seperti `400 Bad Request` dengan baik.
+
+5. Modifikasi dan penghapusan tugas (PATCH & DELETE)
+   Saat user menandai tugas selesai atau menghapus tugas, prosesnya harus dilakukan dengan event delegation, yaitu menaruh satu event listener di parent container. Setelah server berhasil merespons, UI harus dirender ulang dengan data terbaru.
+
+6. Error handling dan ketahanan aplikasi
+   Ini bagian yang paling penting. Aplikasi tidak boleh crash saat kondisi jaringan buruk atau server tidak merespons. Kamu harus menguji dengan `__API.setMode("offline")` atau `"lambat"` dan memastikan error ditangani dengan blok `try...catch` serta ditampilkan ke UI, bukan hanya muncul di console sebagai unhandled rejection.
+
+Arahan langkah demi langkah untuk mengerjakan tugas
+
+Sebelum mulai coding, pastikan kamu menyesuaikan nama file proyek Minggu 5 agar sesuai dengan spesifikasi pengumpulan:
+- `todolist.html` menjadi `index.html`
+- `script.js` menjadi `app.js`
+
+Jangan lupa menambahkan file mock API dari referensi dosen ke dalam proyek.
+
+Lakukan pengerjaan secara bertahap agar mudah dikelola dan memenuhi syarat minimal 5 kali Git commit:
+
+### Commit 1: Helper API dan fetch awal
+- buat fungsi `api(url, options)`
+- gunakan `fetch()`
+- cek `res.ok`
+- kembalikan data JSON jika sukses
+- lempar `new Error(...)` jika gagal
+- buat fungsi `fetchInitialData()` yang memanggil `/api/tugas` dan `/api/matakuliah` dengan `Promise.all`
+- tampilkan state loading sebelum data selesai dimuat
+
+### Commit 2: Render state UI
+- gunakan data dari API untuk membuat elemen HTML daftar tugas
+- isi dropdown mata kuliah dengan data dari `/api/matakuliah`
+- tampilkan pesan kosong ketika data belum ada
+- ganti tampilan loading menjadi list tugas yang sesungguhnya
+
+### Commit 3: Menambahkan tugas via POST
+- tambahkan event `submit` pada form
+- panggil `e.preventDefault()`
+- ambil data dari input teks, mata kuliah, dan tanggal deadline
+- nonaktifkan tombol submit saat proses sedang berjalan
+- kirim data ke server dengan `method: "POST"` dan `Content-Type: application/json`
+- tambahkan `try...catch` untuk menangani error
+- aktifkan kembali tombol submit setelah berhasil atau gagal
+
+### Commit 4: PATCH dan DELETE dengan event delegation
+- pasang listener di elemen parent list tugas
+- deteksi klik checkbox dan tombol hapus menggunakan `closest()` atau `matches()`
+- ambil `data-id` untuk target tugas tertentu
+- kirim request dengan method sesuai (`PATCH` atau `DELETE`)
+- render ulang UI setelah sukses
+
+### Commit 5: Error handling yang tahan uji
+- tes dengan `__API.setMode("offline")` dan `__API.setMode("lambat")`
+- pastikan semua error ditangkap dalam `catch`
+- tampilkan pesan error di UI, bukan hanya di console
+- buat tombol "Coba lagi" untuk memuat ulang data awal
+- pastikan aplikasi tetap berfungsi meskipun server tidak responsif
+
+Bonus (jika waktu memungkinkan):
+- tambahkan fitur debounce pada pencarian
+- gunakan optimistic update agar perubahan pada UI terlihat lebih cepat sebelum respons server datang
+
+### Kesimpulan
+Tugas Minggu 6 bukan hanya tentang menampilkan daftar tugas di browser, tetapi juga tentang bagaimana aplikasi berinteraksi dengan server secara aman, konsisten, dan tahan terhadap error. Jika kamu mengikuti alur commit di atas, kamu akan lebih mudah memahami arsitektur aplikasi, mulai dari fetch API, render UI, update state, sampai penanganan error yang profesional.
+
+Jika kamu mau, saya juga bisa bantu lanjutkan dengan:
+1. membuat versi ringkas untuk tugas yang akan dikumpulkan
+2. membantu menuliskan pseudo-code atau flowchart
+3. menuntun pembuatan kode `app.js` step-by-step dari awal sampai selesai
