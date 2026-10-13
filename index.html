@@ -21,6 +21,28 @@
         <button id="reloadButton" type="button">Muat ulang</button>
     </div>
 
+    <form id="taskForm" class="input">
+        <label class="sr-only" for="taskInput">Judul tugas</label>
+        <input
+            id="taskInput"
+            type="text"
+            placeholder="Judul tugas (min. 3 karakter)"
+            required
+        >
+
+        <label class="sr-only" for="courseInput">Mata kuliah</label>
+        <select id="courseInput" required>
+            <option value="">Pilih mata kuliah</option>
+        </select>
+
+        <label class="sr-only" for="dueDateInput">Deadline</label>
+        <input id="dueDateInput" type="date">
+
+        <button id="addButton" type="submit">Tambah</button>
+    </form>
+
+    <p id="actionError" role="alert"></p>
+
     <section class="filters" aria-label="Filter tugas">
         <button type="button" data-filter="all">Semua</button>
         <button type="button" data-filter="active">Aktif</button>

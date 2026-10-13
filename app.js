@@ -2,6 +2,9 @@ let tasks = [];
 let courses = [];
 let currentFilter = "all";
 let loading = false;
+let submitting = false;
+const actionError = document.getElementById("actionError");
+const taskForm = document.getElementById("taskForm");
 let loadError = "";
 
 const taskList = document.getElementById("task");
@@ -18,12 +21,14 @@ async function api(path, options = {}) {
 }
 
 function render() {
-  taskList.replaceChildren();
-  taskList.setAttribute("aria-busy", String(loading));
+    taskForm.querySelectorAll("input, select, button").forEach(control => {
+    control.disabled = loading || submitting;});
+    taskList.replaceChildren();
+    taskList.setAttribute("aria-busy", String(loading));
 
-  document.getElementById("reloadButton").disabled = loading;
+    document.getElementById("reloadButton").disabled = loading;
 
-  document.querySelectorAll("[data-filter]").forEach(button => {
+    document.querySelectorAll("[data-filter]").forEach(button => {
     button.setAttribute(
       "aria-pressed",
       String(button.dataset.filter === currentFilter)
@@ -90,6 +95,39 @@ function render() {
   });
 }
 
+taskForm.addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (submitting || loading || loadError) return;
+
+  submitting = true;
+  actionError.textContent = "";
+  render();
+
+  try {
+    const task = await api("/api/tugas", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        text: document.getElementById("taskInput").value.trim(),
+        course: document.getElementById("courseInput").value,
+        dueDate: document.getElementById("dueDateInput").value
+      })
+    });
+
+    tasks.push(task);
+    taskForm.reset();
+  } catch (error) {
+    actionError.textContent = error.message;
+  } finally {
+    submitting = false;
+    render();
+    document.getElementById("taskInput").focus();
+  }
+});
+
 async function loadTasks() {
   if (loading) return;
 
@@ -99,6 +137,13 @@ async function loadTasks() {
 
   try {
     tasks = await api("/api/tugas");
+    courses = await api("/api/matakuliah");
+
+    const select = document.getElementById("courseInput");
+    select.replaceChildren(new Option("Pilih mata kuliah", ""));
+
+    courses.forEach(course => {
+    select.add(new Option(course.name, course.id));});
   } catch (error) {
     loadError = error.message;
   } finally {

@@ -132,3 +132,31 @@ button[aria-pressed="true"],
     margin-top: 8px;
   }
 }
+
+.input {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+}
+
+#taskInput {
+  grid-column: 1 / -1;
+}
+
+#actionError {
+  color: #b52b2b;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 600px) {
+  .input {
+    grid-template-columns: 1fr;
+  }
+}
