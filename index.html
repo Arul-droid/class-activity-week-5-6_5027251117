@@ -11,6 +11,22 @@
 <body>
   <main class="todolist">
     <h1>Task Tracker Kuliah Arul <small>v2 · REST API</small></h1>
+    <div class="toolbar">
+        <label for="networkMode">Simulasi jaringan</label>
+        <select id="networkMode">
+            <option value="normal">Normal</option>
+            <option value="offline">Offline</option>
+            <option value="lambat">Lambat (2 detik)</option>
+        </select>
+        <button id="reloadButton" type="button">Muat ulang</button>
+    </div>
+
+    <section class="filters" aria-label="Filter tugas">
+        <button type="button" data-filter="all">Semua</button>
+        <button type="button" data-filter="active">Aktif</button>
+        <button type="button" data-filter="completed">Selesai</button>
+        <span id="activeCount"></span>
+    </section>
     <div id="status" role="status" aria-live="polite"></div>
     <ul id="task"></ul>
   </main>

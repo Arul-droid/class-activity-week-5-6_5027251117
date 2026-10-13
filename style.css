@@ -1,21 +1,134 @@
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
-    color: black;
-    background-color: antiquewhite;
-    font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 40px 16px;
+  color: #153149;
+  background: #edf3f8;
+  font-family: Arial, sans-serif;
 }
 
-li {
-  margin: 8px 0;
+.todolist {
+  max-width: 880px;
+  margin: auto;
+  padding: 28px;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 10px 35px #15314912;
 }
-.done {
-  text-decoration: line-through;
-  color: gray;
+
+h1 {
+  margin: 0 0 24px;
+  font-size: 26px;
 }
+
+h1 small {
+  font-size: 14px;
+  font-weight: normal;
+  color: #54738d;
+  white-space: nowrap;
+}
+
+.toolbar,
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 18px 0;
+}
+
+input,
+select,
 button {
-  margin-left: 5px;
+  font: inherit;
+  padding: 11px 13px;
+  border: 1px solid #b6cbde;
+  border-radius: 7px;
 }
 
+button {
+  cursor: pointer;
+  background: white;
+  color: #153149;
+}
+
+button:hover {
+  background: #edf3f8;
+}
+
+button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+button[aria-pressed="true"],
+#addButton {
+  color: white;
+  background: #153149;
+}
+
+#activeCount {
+  margin-left: auto;
+  color: #54738d;
+  font-size: 14px;
+}
+
+#status {
+  color: #54738d;
+  margin: 18px 0;
+}
+
+#task {
+  padding: 0;
+  list-style: none;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  margin: 9px 0;
+  border: 1px solid #d2dfeb;
+  border-radius: 8px;
+}
+
+.task-content {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.task-content small {
+  display: block;
+  color: #54738d;
+  margin-top: 7px;
+}
+
+.completed .task-title {
+  text-decoration: line-through;
+  color: #6c7c8a;
+}
+
+:focus-visible {
+  outline: 3px solid #eeae42;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .todolist {
+    padding: 18px;
+  }
+
+  body {
+    padding: 16px 10px;
+  }
+
+  h1 small {
+    display: block;
+    margin-top: 8px;
+  }
+}
